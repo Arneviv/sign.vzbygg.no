@@ -11,13 +11,23 @@ function unauthorized() {
 
 export function middleware(req: NextRequest) {
   const url = new URL(req.url);
+
   if (url.pathname.startsWith('/admin')) {
     const header = req.headers.get('authorization');
     if (!header?.startsWith('Basic ')) return unauthorized();
 
-    // decode
     const base64 = header.split(' ')[1] || '';
-    const [user, pass] = Buffer.from(base64, 'base64').toString('utf8').split(':', 2);
+    // Edge-runtime har ikke Node's Buffer; bruk atob (web API)
+    let decoded = '';
+    try {
+      decoded = atob(base64);
+    } catch {
+      return unauthorized();
+    }
+
+    const sepIdx = decoded.indexOf(':');
+    const user = sepIdx >= 0 ? decoded.slice(0, sepIdx) : '';
+    const pass = sepIdx >= 0 ? decoded.slice(sepIdx + 1) : '';
 
     const expectedUser = process.env.ADMIN_USER;
     const expectedPass = process.env.ADMIN_PASS;
@@ -26,9 +36,10 @@ export function middleware(req: NextRequest) {
 
     return NextResponse.next();
   }
+
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/admin/:path*']
+  matcher: ['/admin/:path*'],
 };
