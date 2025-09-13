@@ -1,12 +1,11 @@
-import type { NextConfig } from 'next';
-
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
   },
-  headers: async () => {
+  async headers() {
     return [
       {
         source: '/(.*)',
@@ -14,10 +13,11 @@ const nextConfig: NextConfig = {
           { key: 'X-Frame-Options', value: 'DENY' },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy', value: 'no-referrer' },
-        ]
-      }
-    ]
-  }
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;
+
